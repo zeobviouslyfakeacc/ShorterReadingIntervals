@@ -74,7 +74,7 @@ namespace ShorterReadingIntervals {
 				case IntervalLength.MINS_15:
 					return 0.25f;
 				default:
-					Debug.LogError("Unknown interval length: " + settings.intervalLength);
+					Debug.LogError("[ShorterReadingIntervals] Unknown interval length: " + settings.intervalLength);
 					return 1f;
 			}
 		}
