@@ -10,7 +10,7 @@ A mod for The Long Dark that lets you research for shorter amounts of time and l
 or
 
 1. If you haven't done so already, install the [Mod Loader](https://github.com/zeobviouslyfakeacc/ModLoaderInstaller)
-2. If you haven't done so already, install [ModSettings](https://github.com/zeobviouslyfakeacc/ModSettings) v1.1 or newer
+2. If you haven't done so already, install [ModSettings](https://github.com/zeobviouslyfakeacc/ModSettings) v1.4 or newer
 3. Download the latest version of `ShorterReadingIntervals.dll` from the [releases page](https://github.com/zeobviouslyfakeacc/ShorterReadingIntervals/releases)
 4. Move `ShorterReadingIntervals.dll` into the mods folder in your TLD install directory
 
