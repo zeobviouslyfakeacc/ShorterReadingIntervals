@@ -69,6 +69,9 @@ namespace ShorterReadingIntervals {
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "ReadComplete", new Type[] { typeof(float) })]
 		private static class ScaleReadComplete {
 			private static void Prefix(Panel_Inventory_Examine __instance, ref float normalizedProgress) {
+				if (!__instance?.m_GearItem?.m_ResearchItem)
+					return;
+
 				int hoursToRead = Traverse.Create(__instance).Field("m_HoursToRead").GetValue<int>();
 				float intervalsRead = normalizedProgress * hoursToRead;
 				if (!Settings.GetAllowInterruptions()) {
