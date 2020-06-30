@@ -1,11 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using ModSettings;
+﻿using ModSettings;
 using UnityEngine;
 
 namespace ShorterReadingIntervals {
-	internal class ReadingSettings : ModSettingsBase {
+	internal class ReadingSettings : JsonModSettings {
 
 		[Name("Reading interval length")]
 		[Description("Sets the shortest amount of time that a book can be read for.")]
@@ -15,54 +12,15 @@ namespace ShorterReadingIntervals {
 		[Name("Count interrupted progress")]
 		[Description("Whether progress within a reading interval should still be counted when you're interrupted.")]
 		public bool allowInterruptions = true;
-
-		protected override void OnConfirm() {
-			Settings.Save();
-		}
 	}
 
 	internal static class Settings {
 
-		private static readonly string MODS_FOLDER_PATH = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-		private static readonly string SETTINGS_PATH = Path.Combine(MODS_FOLDER_PATH, "ShorterReadingIntervals.json");
-
 		private static ReadingSettings settings;
 
 		public static void OnLoad() {
-			settings = LoadOrCreateSettings();
+			settings = new ReadingSettings();
 			settings.AddToModSettings("Shorter Reading Intervals");
-
-			Version version = Assembly.GetExecutingAssembly().GetName().Version;
-			Debug.Log("[ShorterReadingIntervals] Version " + version + " loaded!");
-		}
-
-		private static ReadingSettings LoadOrCreateSettings() {
-			if (!File.Exists(SETTINGS_PATH)) {
-				Debug.Log("[ShorterReadingIntervals] Settings file did not exist, using default settings.");
-				return new ReadingSettings();
-			}
-
-			try {
-				string json = File.ReadAllText(SETTINGS_PATH, System.Text.Encoding.UTF8);
-				return JsonUtility.FromJson<ReadingSettings>(json);
-			} catch (Exception ex) {
-				Debug.LogError("[ShorterReadingIntervals] Error while trying to read config file:");
-				Debug.LogException(ex);
-
-				// Re-throw to make error show up in main menu
-				throw new IOException("Error while trying to read config file", ex);
-			}
-		}
-
-		internal static void Save() {
-			try {
-				string json = JsonUtility.ToJson(settings, prettyPrint: true);
-				File.WriteAllText(SETTINGS_PATH, json, System.Text.Encoding.UTF8);
-				Debug.Log("[ShorterReadingIntervals] Config file saved to " + SETTINGS_PATH);
-			} catch (Exception ex) {
-				Debug.LogError("[ShorterReadingIntervals] Error while trying to write config file:");
-				Debug.LogException(ex);
-			}
 		}
 
 		internal static float GetReadingIntervalHours() {

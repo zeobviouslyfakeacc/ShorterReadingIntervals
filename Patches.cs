@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Reflection.Emit;
-using System.Collections.Generic;
 using Harmony;
 using UnityEngine;
 
@@ -14,9 +12,8 @@ namespace ShorterReadingIntervals {
 				float readingInterval = Settings.GetReadingIntervalHours();
 				int maximumIntervals = Mathf.CeilToInt(hoursResearchRemaining / readingInterval);
 
-				Traverse hoursTraverse = Traverse.Create(__instance).Field("m_HoursToRead");
-				int intervalsToRead = hoursTraverse.GetValue<int>();
-				hoursTraverse.SetValue(Mathf.Clamp(intervalsToRead, 1, maximumIntervals));
+				int intervalsToRead = Mathf.Clamp(__instance.m_HoursToRead, 1, maximumIntervals);
+				__instance.m_HoursToRead = intervalsToRead;
 
 				float hoursToRead = Math.Min(intervalsToRead * readingInterval, hoursResearchRemaining);
 				__instance.m_TimeToReadLabel.text = hoursToRead.ToString("0.##");
@@ -25,8 +22,10 @@ namespace ShorterReadingIntervals {
 
 				if (Utils.IsGamepadActive()) {
 					ButtonLegend buttonLegend = __instance.m_ButtonLegendContainer.m_ButtonLegend;
-					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterLeft", ref __instance.m_GamepadReadHoursSpriteDecrease);
-					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterRight", ref __instance.m_GamepadReadHoursSpriteIncrease);
+					UISprite decrease = __instance.m_GamepadReadHoursSpriteDecrease;
+					UISprite increase = __instance.m_GamepadReadHoursSpriteIncrease;
+					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterLeft", ref decrease);
+					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterRight", ref increase);
 				}
 
 				return false; // Never run the original
@@ -38,41 +37,42 @@ namespace ShorterReadingIntervals {
 			private static bool Prefix(Panel_Inventory_Examine __instance) {
 				float hoursResearchRemaining = GetHoursResearchRemaining(__instance);
 				int maximumIntervals = Mathf.CeilToInt(hoursResearchRemaining / Settings.GetReadingIntervalHours());
-
-				Traverse hoursTraverse = Traverse.Create(__instance).Field("m_HoursToRead");
-				int intervalsToRead = hoursTraverse.GetValue<int>();
+				int intervalsToRead = __instance.m_HoursToRead;
 
 				if (intervalsToRead >= maximumIntervals) {
 					GameAudioManager.PlayGUIError();
 				} else {
-					hoursTraverse.SetValue(intervalsToRead + 1);
+					++__instance.m_HoursToRead;
 					GameAudioManager.PlayGUIScroll();
-					AccessTools.Method(typeof(Panel_Inventory_Examine), "RefreshHoursToRead").Invoke(__instance, new object[0]);
+					__instance.RefreshHoursToRead();
 				}
-
 				return false; // Never run the original
 			}
 		}
 
-		[HarmonyPatch(typeof(Panel_Inventory_Examine), "StartRead", new Type[] { typeof(int), typeof(string) })]
+		[HarmonyPatch(typeof(Panel_Inventory_Examine), "AccelerateTimeOfDay", new Type[] { typeof(int), typeof(bool) })]
 		private static class ScaleStartRead {
-			private static void Prefix(Panel_Inventory_Examine __instance, ref int durationMinutes) {
+			private static void Prefix(Panel_Inventory_Examine __instance, ref int minutes) {
+				if (!__instance.m_GearItem?.m_ResearchItem)
+					return;
+
 				float hoursResearchRemaining = GetHoursResearchRemaining(__instance);
-				float minutesToRead = Math.Min(durationMinutes * Settings.GetReadingIntervalHours(), hoursResearchRemaining * 60f);
+				float minutesToRead = Math.Min(minutes * Settings.GetReadingIntervalHours(), hoursResearchRemaining * 60f);
 				float hoursToRead = minutesToRead / 60f;
 
 				__instance.m_ReadTimeSeconds = 1 + 3 * Mathf.Log(1 + hoursToRead);
-				durationMinutes = Mathf.CeilToInt(minutesToRead);
+				__instance.m_ProgressBarTimeSeconds = __instance.m_ReadTimeSeconds;
+				minutes = Mathf.CeilToInt(minutesToRead);
 			}
 		}
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "ReadComplete", new Type[] { typeof(float) })]
 		private static class ScaleReadComplete {
 			private static void Prefix(Panel_Inventory_Examine __instance, ref float normalizedProgress) {
-				if (!__instance?.m_GearItem?.m_ResearchItem)
+				if (!__instance.m_GearItem?.m_ResearchItem)
 					return;
 
-				int hoursToRead = Traverse.Create(__instance).Field("m_HoursToRead").GetValue<int>();
+				int hoursToRead = __instance.m_HoursToRead;
 				float intervalsRead = normalizedProgress * hoursToRead;
 				if (!Settings.GetAllowInterruptions()) {
 					intervalsRead = Mathf.Floor(intervalsRead);
@@ -88,13 +88,14 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "RefreshReadPanel", new Type[0])]
 		private static class DisplayHoursReadProgressAsFraction {
-			private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
-				foreach (CodeInstruction instruction in instructions) {
-					if (instruction.opcode == OpCodes.Ldstr && ((string) instruction.operand) == "F0") {
-						instruction.operand = "0.##";
-					}
-					yield return instruction;
-				}
+			private static void Postfix(Panel_Inventory_Examine __instance) {
+				if (!__instance.m_GearItem?.m_ResearchItem)
+					return;
+
+				string text = Localization.Get("GAMEPLAY_HoursResearched");
+				text = text.Replace("{val1}", __instance.m_GearItem.m_ResearchItem.GetElapsedHours().ToString("0.##"));
+				text = text.Replace("{val2}", __instance.m_GearItem.m_ResearchItem.m_TimeRequirementHours.ToString());
+				__instance.m_TimeToReadRemainingLabel.text = text;
 			}
 		}
 
