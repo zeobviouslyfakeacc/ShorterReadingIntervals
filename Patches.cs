@@ -87,6 +87,14 @@ namespace ShorterReadingIntervals {
 			}
 		}
 
+		[HarmonyPatch(typeof(ResearchItem), "OnResearchComplete", new Type[0])]
+		private static class PreventDoubleSkillPointsBeingAwarded {
+			internal static bool Prefix(ResearchItem __instance) {
+				// Only run the original - and award skill points - if the item type is still Tool and not yet FireStarting
+				return __instance.GetComponent<GearItem>()?.m_Type == GearTypeEnum.Tool;
+			}
+		}
+
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "RefreshReadPanel", new Type[0])]
 		private static class DisplayHoursReadProgressAsFraction {
 			internal static void Postfix(Panel_Inventory_Examine __instance) {
