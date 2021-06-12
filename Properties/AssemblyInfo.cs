@@ -14,5 +14,5 @@ using System.Runtime.InteropServices;
 [assembly: Guid("2878cf6b-b84b-4573-8185-12a5654f0496")]
 [assembly: AssemblyVersion("1.2.0.0")]
 [assembly: AssemblyFileVersion("1.2.0.0")]
-[assembly: MelonModInfo(typeof(ShorterReadingIntervals.ShorterReadingIntervalsMod), "ShorterReadingIntervals", "1.2", "zeobviouslyfakeacc")]
-[assembly: MelonModGame("Hinterland", "TheLongDark")]
+[assembly: MelonInfo(typeof(ShorterReadingIntervals.ShorterReadingIntervalsMod), "ShorterReadingIntervals", "1.2", "zeobviouslyfakeacc")]
+[assembly: MelonGame("Hinterland", "TheLongDark")]
