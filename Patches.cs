@@ -7,7 +7,7 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "RefreshHoursToRead", new Type[0])]
 		private static class FixHoursToRead {
-			private static bool Prefix(Panel_Inventory_Examine __instance) {
+			internal static bool Prefix(Panel_Inventory_Examine __instance) {
 				float hoursResearchRemaining = GetHoursResearchRemaining(__instance);
 				float readingInterval = Settings.GetReadingIntervalHours();
 				int maximumIntervals = Mathf.CeilToInt(hoursResearchRemaining / readingInterval);
@@ -24,6 +24,7 @@ namespace ShorterReadingIntervals {
 					ButtonLegend buttonLegend = __instance.m_ButtonLegendContainer.m_ButtonLegend;
 					UISprite decrease = __instance.m_GamepadReadHoursSpriteDecrease;
 					UISprite increase = __instance.m_GamepadReadHoursSpriteIncrease;
+					// The second argument is declared as ref, but is never assigned to in ConfigureButtonIconSpriteName.
 					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterLeft", ref decrease);
 					buttonLegend.ConfigureButtonIconSpriteName("Inventory_FilterRight", ref increase);
 				}
@@ -34,7 +35,7 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "OnReadHoursIncrease", new Type[0])]
 		private static class FixOnReadHoursIncrease {
-			private static bool Prefix(Panel_Inventory_Examine __instance) {
+			internal static bool Prefix(Panel_Inventory_Examine __instance) {
 				float hoursResearchRemaining = GetHoursResearchRemaining(__instance);
 				int maximumIntervals = Mathf.CeilToInt(hoursResearchRemaining / Settings.GetReadingIntervalHours());
 				int intervalsToRead = __instance.m_HoursToRead;
@@ -52,7 +53,7 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "AccelerateTimeOfDay", new Type[] { typeof(int), typeof(bool) })]
 		private static class ScaleStartRead {
-			private static void Prefix(Panel_Inventory_Examine __instance, ref int minutes) {
+			internal static void Prefix(Panel_Inventory_Examine __instance, ref int minutes) {
 				if (!__instance.m_GearItem?.m_ResearchItem)
 					return;
 
@@ -68,7 +69,7 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "ReadComplete", new Type[] { typeof(float) })]
 		private static class ScaleReadComplete {
-			private static void Prefix(Panel_Inventory_Examine __instance, ref float normalizedProgress) {
+			internal static void Prefix(Panel_Inventory_Examine __instance, ref float normalizedProgress) {
 				if (!__instance.m_GearItem?.m_ResearchItem)
 					return;
 
@@ -88,7 +89,7 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(Panel_Inventory_Examine), "RefreshReadPanel", new Type[0])]
 		private static class DisplayHoursReadProgressAsFraction {
-			private static void Postfix(Panel_Inventory_Examine __instance) {
+			internal static void Postfix(Panel_Inventory_Examine __instance) {
 				if (!__instance.m_GearItem?.m_ResearchItem)
 					return;
 
