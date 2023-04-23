@@ -1,6 +1,8 @@
 ﻿using System;
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
+using Il2Cpp;
+using Il2CppTLD.Gear;
 
 namespace ShorterReadingIntervals {
 	internal static class Patches {
@@ -91,7 +93,8 @@ namespace ShorterReadingIntervals {
 		private static class PreventDoubleSkillPointsBeingAwarded {
 			internal static bool Prefix(ResearchItem __instance) {
 				// Only run the original - and award skill points - if the item type is still Tool and not yet FireStarting
-				return __instance.GetComponent<GearItem>()?.m_Type == GearTypeEnum.Tool;
+				var isTool = __instance.GetComponent<GearItem>()?.IsGearType(GearType.Tool);
+				return isTool.GetValueOrDefault();
 			}
 		}
 
