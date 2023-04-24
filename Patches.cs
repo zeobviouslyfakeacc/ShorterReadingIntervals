@@ -91,10 +91,11 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(ResearchItem), "OnResearchComplete", new Type[0])]
 		private static class PreventDoubleSkillPointsBeingAwarded {
-			internal static bool Prefix(ResearchItem __instance) {
-				// Only run the original - and award skill points - if the item type is still Tool and not yet FireStarting
-				var isTool = __instance.GetComponent<GearItem>()?.IsGearType(GearType.Tool);
-				return isTool.GetValueOrDefault();
+
+			internal static void Postfix(ResearchItem __instance) {                
+				// Necessary to prevent skill points being applied twice when the method is run again
+                __instance.m_SkillPoints = 0;
+				__instance.m_SkillType = SkillType.None;
 			}
 		}
 
