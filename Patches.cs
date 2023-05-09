@@ -1,6 +1,8 @@
 ﻿using System;
-using Harmony;
+using HarmonyLib;
 using UnityEngine;
+using Il2Cpp;
+using Il2CppTLD.Gear;
 
 namespace ShorterReadingIntervals {
 	internal static class Patches {
@@ -89,9 +91,11 @@ namespace ShorterReadingIntervals {
 
 		[HarmonyPatch(typeof(ResearchItem), "OnResearchComplete", new Type[0])]
 		private static class PreventDoubleSkillPointsBeingAwarded {
-			internal static bool Prefix(ResearchItem __instance) {
-				// Only run the original - and award skill points - if the item type is still Tool and not yet FireStarting
-				return __instance.GetComponent<GearItem>()?.m_Type == GearTypeEnum.Tool;
+
+			internal static void Postfix(ResearchItem __instance) {                
+				// Necessary to prevent skill points being applied twice when the method is run again
+                __instance.m_SkillPoints = 0;
+				__instance.m_SkillType = SkillType.None;
 			}
 		}
 
